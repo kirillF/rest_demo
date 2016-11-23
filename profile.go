@@ -1,11 +1,15 @@
 package main
 
 type Profile struct {
-	Id        string `json:"id"`
-	Name      string `json: "name"`
-	Surname   string `json: "surname"`
-	AvatarUri string `json: "avatarUri"`
-	Age       int    `json: "age"`
+	Id        string `json:"id,omitempty"`
+	Name      string `json: "name,omitempty"`
+	Surname   string `json: "surname,omitempty"`
+	AvatarUri string `json: "avatarUri,omitempty"`
+	Age       int    `json: "age,omitempty"`
+}
+
+type Boobs struct {
+	HasBoobs *bool `json:"hasboobs,omitempty"`
 }
 
 type Profiles []Profile

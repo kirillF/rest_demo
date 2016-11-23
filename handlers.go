@@ -11,6 +11,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type Result interface{}
+
+type Response struct {
+	Result `json:"result"`
+}
+
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 }
@@ -20,14 +26,26 @@ func ProfileInfo(w http.ResponseWriter, r *http.Request) {
 
 	var responseWriter http.ResponseWriter
 	responseWriter = SetHeaders(w, http.StatusOK)
-	if err := json.NewEncoder(responseWriter).Encode(GetProfile(profileId)); err != nil {
+	result := Response{GetProfile(profileId)}
+	if err := json.NewEncoder(responseWriter).Encode(result); err != nil {
 		panic(err)
 	}
 }
 
 func ProfileBoobs(w http.ResponseWriter, r *http.Request) {
 	profileId := GetProfileId(r)
-	fmt.Fprintln(w, "Get profile boobs:", profileId)
+	profile := GetProfile(profileId)
+
+	var result Result
+	var hasBoobs bool
+	hasBoobs = profile.Age >= 18
+	result = Response{Boobs{&hasBoobs}}
+
+	var responseWriter http.ResponseWriter
+	responseWriter = SetHeaders(w, http.StatusOK)
+	if err := json.NewEncoder(responseWriter).Encode(result); err != nil {
+		panic(err)
+	}
 }
 
 func ProfileAvatar(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +64,7 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	p := UpdateRepoProfile(profile)
 
 	SetHeaders(w, http.StatusOK)
-	if err := json.NewEncoder(w).Encode(p); err != nil {
+	if err := json.NewEncoder(w).Encode(Response{p}); err != nil {
 		panic(err)
 	}
 
@@ -57,7 +75,7 @@ func CreateProfile(w http.ResponseWriter, r *http.Request) {
 	p := SaveProfile(profile)
 
 	SetHeaders(w, http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(p); err != nil {
+	if err := json.NewEncoder(w).Encode(Response{p}); err != nil {
 		panic(err)
 	}
 }
@@ -75,7 +93,7 @@ func ReadProfile(w http.ResponseWriter, r *http.Request) Profile {
 
 	if err := json.Unmarshal(body, &profile); err != nil {
 		SetHeaders(w, 422)
-		if err := json.NewEncoder(w).Encode(err); err != nil {
+		if err := json.NewEncoder(w).Encode(Response{err}); err != nil {
 			panic(err)
 		}
 	}
